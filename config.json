@@ -1,3 +1,5 @@
 {
-    "ValorantPaksPath":  "C:\\Riot Games\\VALORANT\\live\\ShooterGame\\Content\\Paks"
+    "ValorantPaksPath":  "C:\\Riot Games\\VALORANT\\live\\ShooterGame\\Content\\Paks",
+    "QResUrl":  "https://github.com/jianonrepeat/ScreenResolutionChanger/raw/refs/heads/master/QRes.exe",
+    "PaksRepoUrl":  "https://raw.githubusercontent.com/jianonrepeat/ValorantEssentials/main/paks"
 }
