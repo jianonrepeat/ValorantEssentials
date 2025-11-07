@@ -198,7 +198,7 @@ function Create-MainForm {
     $stretchGroup.BackColor = $theme.DarkerCharcoal
     $stretchGroup.Font = $font
 
-    $inputFields = New-InputField -Text "WIDTH" -X 20 -Y 60 -Width 180 -Value "1440"
+    $inputFields = New-InputField -Text "WIDTH" -X 20 -Y 60 -Width 180 -Value "1728"
     $widthTextBox = $inputFields[0]; $widthLabel = $inputFields[1]
 
     $inputFields = New-InputField -Text "HEIGHT" -X 220 -Y 60 -Width 180 -Value "1080"
