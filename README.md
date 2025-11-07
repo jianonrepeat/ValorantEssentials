@@ -1,87 +1,82 @@
-# ValorantEssentials 🎮
+# ValorantEssentials: Your All-in-One VALORANT Utility
 
-A powerful, user-friendly utility designed to enhance your VALORANT gaming experience with stretched resolution support and custom content management. Built with PowerShell for Windows.
+A powerful PowerShell-based tool for Windows that enhances your VALORANT experience with custom stretched resolution and easy content management.
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blue.svg)](https://docs.microsoft.com/en-us/powershell/)
-[![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6.svg)](https://www.microsoft.com/windows)
-
-## ✨ Features
-
-- **Stretched Resolution** - Optimize your gameplay with custom aspect ratios
-- **One-Click Setup** - Simple and intuitive interface
-- **Automatic Resolution Management** - Seamless switching between desktop and game resolutions
-- **Custom Content Support** - Install and manage game assets
-- **Auto-Detection** - Automatically finds your VALORANT installation
-- **Dark Theme UI** - Easy on the eyes during late-night gaming sessions
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Windows 10/11 (64-bit)
-- VALORANT installed
-- Administrator privileges
-- PowerShell 5.1 or later
-
-### Installation
-1. Download the latest release from the [releases page](https://github.com/yourusername/ValorantEssentials/releases)
-2. Extract the ZIP file to your preferred location
-3. Right-click `run.bat` and select "Run as administrator"
-
-## 🎮 Usage
-
-### Setting Up Stretched Resolution
-1. Run the application as administrator
-2. Enter your desired resolution (e.g., `1440x1080` or `1280x960`)
-3. Click "Start Stretched Res Launcher"
-4. Launch VALORANT from the app or manually
-
-### Installing Custom Content
-1. Click "Install/Update 'Blood Paks'"
-2. Follow the on-screen instructions
-3. Restart VALORANT if prompted
-
-## 🔧 Troubleshooting
-
-### Common Issues
-- **Permission Errors**
-  - Ensure you're running the app as administrator
-  - Right-click → Properties → Compatibility → Check "Run this program as an administrator"
-
-- **Resolution Not Applying**
-  - Verify VALORANT is in Fullscreen or Borderless Windowed mode
-  - Check that your GPU settings aren't overriding the resolution
-
-- **Custom Content Not Loading**
-  - Confirm your VALORANT installation path is correct
-  - Make sure the game is fully closed before installing content
-
-## ⚠️ Important Notes
-
-### Safety & Compatibility
-- This tool only modifies VALORANT's configuration files
-- No interaction with game memory or Vanguard anti-cheat
-- Use custom content at your own risk
-- Always back up your game files before making changes
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## ⚠️ Disclaimer
-
-This project is not affiliated with, authorized, maintained, sponsored or endorsed by Riot Games, Inc. or any of its affiliates or subsidiaries. All game content and materials are trademarks and copyrights of their respective owners.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PowerShell: 5.1+](https://img.shields.io/badge/PowerShell-5.1+-blue.svg)](https://docs.microsoft.com/en-us/powershell/)
+[![Platform: Windows](https://img.shields.io/badge/Platform-Windows-0078D6.svg)](https://www.microsoft.com/windows)
 
 ---
 
-Made with ❤️ for the VALORANT community
+## Why Use ValorantEssentials?
+
+ValorantEssentials is designed for players who want to optimize their gameplay and customize their experience without hassle. Whether you're looking to gain a competitive edge with a custom aspect ratio or install unique visual assets, this tool automates the process safely and efficiently.
+
+### Key Features
+
+- **Gain a Competitive Edge**: Apply stretched resolutions like `1440x1080` to widen targets and potentially improve your aim.
+- **Automated Setup**: The tool automatically detects your VALORANT installation and handles resolution changes for you.
+- **Custom Content**: Easily install and manage custom `.pak` files, such as the popular "Blood Paks," to modify in-game visuals.
+- **User-Friendly Interface**: A simple, dark-themed GUI makes it easy to access all features.
+- **Safe to Use**: Modifies configuration files only and does not interact with Vanguard anti-cheat or game memory.
+
+## Getting Started
+
+### Prerequisites
+
+- Windows 10 or 11 (64-bit)
+- VALORANT installed
+- Administrator privileges
+
+### Installation & First Use
+
+1.  **Download**: Grab the latest version from the [**Releases Page**](https://github.com/yourusername/ValorantEssentials/releases).
+2.  **Extract**: Unzip the downloaded file into a folder of your choice.
+3.  **Run**: Right-click `run.bat` and select **Run as administrator**.
+
+## How to Use
+
+### Applying Stretched Resolution
+
+1.  Launch the application as an administrator.
+2.  Enter your desired resolution in the input box (e.g., `1440x1080`).
+3.  Click the **Start Stretched Res Launcher** button.
+4.  Launch VALORANT. The script will automatically apply the custom resolution when the game starts and revert it when you exit.
+
+### Installing Custom Content
+
+1.  Ensure VALORANT is completely closed.
+2.  Click the **Install/Update 'Blood Paks'** button.
+3.  The tool will download and install the necessary files into your game directory.
+4.  Restart VALORANT to see the changes.
+
+## Configuration (`config.json`)
+
+The `config.json` file allows for manual overrides if auto-detection fails.
+
+-   `ValorantPaksPath`: The full path to your VALORANT `Paks` directory.
+    -   *Example*: `"C:\\Riot Games\\VALORANT\\live\\ShooterGame\\Content\\Paks"`
+-   `QResUrl`: The download URL for `QRes.exe`, the utility that manages resolution switching.
+-   `PaksRepoUrl`: The repository URL where custom content is hosted.
+
+## Troubleshooting
+
+-   **Permission Denied?** The script requires administrator rights to modify game files and change screen resolution. Please ensure you run `run.bat` as an administrator.
+-   **Resolution Not Working?** In VALORANT's video settings, ensure the display mode is set to **Windowed Fullscreen**.
+-   **Custom Content Not Loading?** Verify that the `ValorantPaksPath` in `config.json` is correct and that the game was fully closed before you tried installing.
+
+## A Note on Safety
+
+This tool is designed with safety in mind. It does not hook into the game's process, read game memory, or interact with Vanguard anti-cheat in any way. It only automates file management and resolution changes that could otherwise be done manually. However, the use of custom game files is done at your own risk.
+
+## How to Contribute
+
+Contributions are welcome! If you have an idea for a new feature or a bug fix, please fork the repository, make your changes, and submit a pull request.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+***
+
+*Disclaimer: This project is not affiliated with, authorized, or endorsed by Riot Games, Inc. All game content and materials are trademarks and copyrights of their respective owners.*
