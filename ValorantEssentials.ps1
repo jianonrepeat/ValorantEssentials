@@ -1,17 +1,14 @@
-# VALORANT ESSENTIALS LAUNCHER
-
-# Elevate to admin and restart if needed
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Start-Process PowerShell -Verb RunAs -ArgumentList "-NoExit", "-File", "`"$PSCommandPath`"", "-ExecutionPolicy", "Bypass"
     exit
 }
 
-# Load required assemblies and configure security
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
-# Global variables
+
 $script:logBox = $null
 $script:basePath = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 $script:qresPath = Join-Path $script:basePath "QRes.exe"
@@ -20,7 +17,7 @@ $script:nativeResolution = $null
 $script:config = $null
 $script:isStretched = $false
 
-# --- THEME COLORS ---
+
 $theme = @{
     ValorantRed     = [System.Drawing.Color]::FromArgb(253, 69, 86)
     OffWhite        = [System.Drawing.Color]::FromArgb(250, 250, 250)
@@ -33,14 +30,12 @@ $theme = @{
     LogAction       = [System.Drawing.Color]::FromArgb(200, 160, 255)
 }
 
-# --- CORE FUNCTIONS ---
+
 
 function Add-Log {
     param ([string]$Message, [System.Drawing.Color]$Color = $theme.OffWhite)
     if ($null -ne $script:logBox) {
         $script:logBox.Invoke([Action]{
-            $script:logBox.SelectionStart = $script:logBox.TextLength
-            $script:logBox.SelectionLength = 0
             $script:logBox.SelectionColor = $Color
             $script:logBox.AppendText("$(Get-Date -Format 'HH:mm:ss') - $Message`r`n")
             $script:logBox.ScrollToCaret()
@@ -48,7 +43,7 @@ function Add-Log {
     }
 }
 
-function Load-Configuration {
+function Import-Configuration {
     if (-not (Test-Path $script:configPath)) {
         $defaultConfig = @{
             ValorantPaksPath = ""
@@ -64,6 +59,20 @@ function Save-Configuration {
     $script:config | ConvertTo-Json -Depth 3 | Set-Content $script:configPath
 }
 
+function Find-ValorantPaksPathInRegistry {
+    $regPaths = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Riot Game valorant.live", "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Riot Game valorant.live"
+    foreach ($regKey in $regPaths) {
+        if (Test-Path $regKey) {
+            $installLocation = (Get-ItemProperty -Path $regKey).InstallLocation
+            $paksPathCandidate = Join-Path $installLocation "live\ShooterGame\Content\Paks"
+            if ($installLocation -and (Test-Path $paksPathCandidate)) {
+                return $paksPathCandidate
+            }
+        }
+    }
+    return $null
+}
+
 function Set-GlobalValorantPaksPath {
     if ($script:config.ValorantPaksPath -and (Test-Path $script:config.ValorantPaksPath)) {
         Add-Log "Found saved Valorant path."
@@ -71,18 +80,12 @@ function Set-GlobalValorantPaksPath {
     }
 
     Add-Log "No saved path. Checking registry..." -Color $theme.LogInfo
-    $regPaths = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Riot Game valorant.live", "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Riot Game valorant.live"
-    foreach ($regKey in $regPaths) {
-        if (Test-Path $regKey) {
-            $installLocation = (Get-ItemProperty -Path $regKey).InstallLocation
-            $paksPathCandidate = Join-Path $installLocation "live\ShooterGame\Content\Paks"
-            if ($installLocation -and (Test-Path $paksPathCandidate)) {
-                Add-Log "Found Valorant in registry. Saving for future use."
-                $script:config.ValorantPaksPath = $paksPathCandidate
-                Save-Configuration
-                return
-            }
-        }
+    $paksPathFromRegistry = Find-ValorantPaksPathInRegistry
+    if ($paksPathFromRegistry) {
+        Add-Log "Found Valorant in registry. Saving for future use."
+        $script:config.ValorantPaksPath = $paksPathFromRegistry
+        Save-Configuration
+        return
     }
 
     Add-Log "Could not find path automatically. Please locate it manually." -Color $theme.LogInfo
@@ -99,7 +102,7 @@ function Set-GlobalValorantPaksPath {
     } else { throw "Operation cancelled by user." }
 }
 
-function Process-IniFile {
+function Update-IniFile {
     param ([string]$FilePath, [string]$Width, [string]$Height)
     if (-not (Test-Path $FilePath)) { return }
     Add-Log "Processing: $($FilePath.Split('\')[-3..-1] -join '\')"
@@ -107,25 +110,33 @@ function Process-IniFile {
     $wasReadOnly = $fileObject.IsReadOnly
     try {
         if ($wasReadOnly) { $fileObject.IsReadOnly = $false }
+        $iniSettings = @{
+            "ResolutionSizeX" = $Width
+            "ResolutionSizeY" = $Height
+            "LastUserConfirmedResolutionSizeX" = $Width
+            "LastUserConfirmedResolutionSizeY" = $Height
+            "DesiredScreenWidth" = $Width
+            "DesiredScreenHeight" = $Height
+            "LastUserConfirmedDesiredScreenWidth" = $Width
+            "LastUserConfirmedDesiredScreenHeight" = $Height
+            "bShouldLetterbox" = "False"
+            "LastConfirmedShouldLetterbox" = "False"
+            "bUseVSync" = "False"
+            "bUseDynamicResolution" = "False"
+            "LastConfirmedFullscreenMode" = "2"
+            "PreferredFullscreenMode" = "2"
+            "FullscreenMode" = "2"
+        }
+
         $newContent = Get-Content $FilePath | ForEach-Object {
-            switch -Wildcard ($_){
-                'ResolutionSizeX=*'                     { "ResolutionSizeX=$Width" }
-                'ResolutionSizeY=*'                     { "ResolutionSizeY=$Height" }
-                'LastUserConfirmedResolutionSizeX=*'    { "LastUserConfirmedResolutionSizeX=$Width" }
-                'LastUserConfirmedResolutionSizeY=*'    { "LastUserConfirmedResolutionSizeY=$Height" }
-                'DesiredScreenWidth=*'                  { "DesiredScreenWidth=$Width" }
-                'DesiredScreenHeight=*'                 { "DesiredScreenHeight=$Height" }
-                'LastUserConfirmedDesiredScreenWidth=*' { "LastUserConfirmedDesiredScreenWidth=$Width" }
-                'LastUserConfirmedDesiredScreenHeight=' { "LastUserConfirmedDesiredScreenHeight=$Height" }
-                'bShouldLetterbox=*'                    { "bShouldLetterbox=False" }
-                'LastConfirmedShouldLetterbox=*'        { "LastConfirmedShouldLetterbox=False" }
-                'bUseVSync=*'                           { "bUseVSync=False" }
-                'bUseDynamicResolution=*'               { "bUseDynamicResolution=False" }
-                'LastConfirmedFullscreenMode=*'         { "LastConfirmedFullscreenMode=2" }
-                'PreferredFullscreenMode=*'             { "PreferredFullscreenMode=2" }
-                'FullscreenMode=*'                      { "FullscreenMode=2" }
-                default                                 { $_ }
+            $line = $_
+            foreach ($key in $iniSettings.Keys) {
+                if ($line -like "$key=*") {
+                    $line = "$key=$($iniSettings[$key])"
+                    break
+                }
             }
+            $line
         }
         Set-Content -Path $FilePath -Value $newContent
     } finally {
@@ -133,10 +144,10 @@ function Process-IniFile {
     }
 }
 
-# --- GUI Creation ---
+
 
 function New-StyledButton {
-    param ($Text, $X, $Y, $Width, $Height, $BackColor)
+    param ($Text, $X, $Y, $Width, $Height, $BackColor, $MouseOverBackColor = $theme.LightCharcoal)
     $button = New-Object System.Windows.Forms.Button
     $button.Text = $Text
     $button.Location = New-Object System.Drawing.Point($X, $Y)
@@ -147,11 +158,12 @@ function New-StyledButton {
     $button.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
     $button.FlatAppearance.BorderSize = 0
     $button.Cursor = [System.Windows.Forms.Cursors]::Hand
-    $button.FlatAppearance.MouseOverBackColor = $theme.LightCharcoal
+    $button.FlatAppearance.MouseOverBackColor = $MouseOverBackColor
     return $button
 }
 
-function New-InputField {
+
+function New-LabeledInputField {
     param ($Text, $X, $Y, $Width, $Value)
     $textBox = New-Object System.Windows.Forms.TextBox
     $textBox.Text = $Value
@@ -170,12 +182,12 @@ function New-InputField {
     return @($textBox, $label)
 }
 
-function Create-MainForm {
-    # Fonts
+function New-MainForm {
+
     $font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Regular)
     $titleFont = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
 
-    # Form setup
+
     $mainForm = New-Object System.Windows.Forms.Form
     $mainForm.Text = "Valorant Essentials"
     $mainForm.Size = New-Object System.Drawing.Size(500, 550)
@@ -186,10 +198,10 @@ function Create-MainForm {
     $mainForm.Padding = New-Object System.Windows.Forms.Padding(20)
     $mainForm.Font = $font
 
-    # Main buttons
-    $updatePaksButton = New-StyledButton -Text "INSTALL / UPDATE BLOOD PAKS" -X 20 -Y 20 -Width 440 -Height 45 -BackColor $theme.ValorantRed
 
-    # Resolution Group
+    $updatePaksButton = New-StyledButton -Text "INSTALL / UPDATE BLOOD PAKS" -X 20 -Y 20 -Width 440 -Height 45 -BackColor $theme.ValorantRed -MouseOverBackColor $theme.LightCharcoal
+
+
     $stretchGroup = New-Object System.Windows.Forms.GroupBox
     $stretchGroup.Location = New-Object System.Drawing.Point(20, 85)
     $stretchGroup.Size = New-Object System.Drawing.Size(440, 200)
@@ -198,15 +210,15 @@ function Create-MainForm {
     $stretchGroup.BackColor = $theme.DarkerCharcoal
     $stretchGroup.Font = $font
 
-    $inputFields = New-InputField -Text "WIDTH" -X 20 -Y 60 -Width 180 -Value "1728"
-    $widthTextBox = $inputFields[0]; $widthLabel = $inputFields[1]
+    $widthInputField = New-LabeledInputField -Text "WIDTH" -X 20 -Y 60 -Width 180 -Value "1728"
+    $widthTextBox = $widthInputField[0]; $widthLabel = $widthInputField[1]
 
-    $inputFields = New-InputField -Text "HEIGHT" -X 220 -Y 60 -Width 180 -Value "1080"
-    $heightTextBox = $inputFields[0]; $heightLabel = $inputFields[1]
+    $heightInputField = New-LabeledInputField -Text "HEIGHT" -X 220 -Y 60 -Width 180 -Value "1080"
+    $heightTextBox = $heightInputField[0]; $heightLabel = $heightInputField[1]
 
-    $startLauncherButton = New-StyledButton -Text "START STRETCHED RESOLUTION" -X 20 -Y 120 -Width 400 -Height 45 -BackColor $theme.ValorantRed
+    $startLauncherButton = New-StyledButton -Text "START STRETCHED RESOLUTION" -X 20 -Y 120 -Width 400 -Height 45 -BackColor $theme.ValorantRed -MouseOverBackColor $theme.LightCharcoal
 
-    # Log section
+
     $logLabel = New-Object System.Windows.Forms.Label
     $logLabel.Text = "STATUS LOG"
     $logLabel.Location = New-Object System.Drawing.Point(20, 305)
@@ -224,24 +236,24 @@ function Create-MainForm {
     $logBox.BorderStyle = [System.Windows.Forms.BorderStyle]::FixedSingle
     $script:logBox = $logBox
 
-    # Add controls
+
     $stretchGroup.Controls.AddRange(@($widthLabel, $widthTextBox, $heightLabel, $heightTextBox, $startLauncherButton))
     $mainForm.Controls.AddRange(@($updatePaksButton, $stretchGroup, $logLabel, $logBox))
 
     return $mainForm, $updatePaksButton, $startLauncherButton, $widthTextBox, $heightTextBox
 }
 
-# --- SCRIPT ENTRY POINT ---
 
-# Create and unpack GUI components
-$formComponents = Create-MainForm
+
+
+$formComponents = New-MainForm
 $mainForm = $formComponents[0]
 $updatePaksButton = $formComponents[1]
 $startLauncherButton = $formComponents[2]
 $widthTextBox = $formComponents[3]
 $heightTextBox = $formComponents[4]
 
-# --- Event Handlers & Timers ---
+
 
 $monitoringTimer = New-Object System.Windows.Forms.Timer
 $monitoringTimer.Interval = 5000
@@ -293,16 +305,12 @@ $startLauncherButton.Add_Click({
         $stretchedWidth = $widthTextBox.Text; $stretchedHeight = $heightTextBox.Text
         $configBasePath = Join-Path $env:USERPROFILE "AppData\Local\VALORANT\Saved\Config"
         if (-not (Test-Path $configBasePath)) { throw "Valorant config directory not found." }
-        $configFolders = Get-ChildItem -Path $configBasePath -Directory | Where-Object { $_.Name -ne "CrashReportClient" }
-        if ($configFolders.Count -eq 0) { throw "No config folders found. Launch Valorant to main menu once." }
+        $iniFiles = Get-ChildItem -Path $configBasePath -Recurse -Include "GameUserSettings.ini" | Where-Object { $_.FullName -notlike "*CrashReportClient*" }
+        if ($iniFiles.Count -eq 0) { throw "No config files found. Launch Valorant to main menu once." }
 
         Add-Log "Patching config files..."
-        foreach ($folder in $configFolders) {
-            $iniFilePath = Join-Path $folder.FullName "WindowsClient\GameUserSettings.ini"
-            if (-not (Test-Path $iniFilePath)) {
-                 $iniFilePath = Join-Path $folder.Parent.FullName "GameUserSettings.ini"
-            }
-            Process-IniFile -FilePath $iniFilePath -Width $stretchedWidth -Height $stretchedHeight
+        foreach ($file in $iniFiles) {
+            Update-IniFile -FilePath $file.FullName -Width $stretchedWidth -Height $stretchedHeight
         }
         $monitoringTimer.Start()
         Add-Log "Setup complete! Monitoring started." -Color $theme.LogSuccess
@@ -326,7 +334,7 @@ $mainForm.Add_FormClosing({
 $mainForm.Add_Load({
     try {
         Add-Log "Initializing..."
-        Load-Configuration
+        Import-Configuration
         $script:nativeResolution = @{ Width = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width; Height = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height }
         Add-Log "Native resolution captured: $($script:nativeResolution.Width)x$($script:nativeResolution.Height)"
 

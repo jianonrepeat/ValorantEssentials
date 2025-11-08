@@ -1,82 +1,68 @@
-# ValorantEssentials: Your All-in-One VALORANT Utility
+# Valorant Essentials
+A PowerShell GUI tool for managing Valorant-specific enhancements: Blood Paks installation/updates and stretched resolution configuration.
 
-A powerful PowerShell-based tool for Windows that enhances your VALORANT experience with custom stretched resolution and easy content management.
+## Purpose
+Simplifies two key Valorant customizations:
+1. Installing/updating Blood Paks (custom game assets)
+2. Setting up and maintaining stretched resolution for gameplay
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PowerShell: 5.1+](https://img.shields.io/badge/PowerShell-5.1+-blue.svg)](https://docs.microsoft.com/en-us/powershell/)
-[![Platform: Windows](https://img.shields.io/badge/Platform-Windows-0078D6.svg)](https://www.microsoft.com/windows)
+## Key Features
+- Auto-detects Valorant's installation path via registry (falls back to manual selection)
+- Downloads missing `QRes.exe` (resolution switching tool) automatically
+- Patches Valorant's `GameUserSettings.ini` files for stretched resolution
+- Monitors Valorant process to switch resolution on launch/exit
+- Admin rights enforcement for critical file operations
+- Real-time status logging in the GUI
+- Persistent configuration storage in `config.json`
 
----
+## Prerequisites
+- Windows operating system
+- Valorant installed (launch at least once to generate config files)
+- PowerShell 5.1 or later (pre-installed on Windows 10+)
+- Internet connection (for initial `QRes.exe` download and Blood Paks updates)
 
-## Why Use ValorantEssentials?
+## Installation
+1. Clone or download the ValorantEssentials repository to your local machine
+2. Ensure the project directory structure is intact:
+   - `ValorantEssentials.ps1` (main tool)
+   - `config.json` (configuration file)
+   - `run.bat` (launcher shortcut)
 
-ValorantEssentials is designed for players who want to optimize their gameplay and customize their experience without hassle. Whether you're looking to gain a competitive edge with a custom aspect ratio or install unique visual assets, this tool automates the process safely and efficiently.
+## Usage Instructions
+### 1. Install/Update Blood Paks
+- Launch `ValorantEssentials.ps1` (runs as admin automatically if not already)
+- Click the **INSTALL / UPDATE BLOOD PAKS** button
+- The tool will delete old VNG files, download new MatureData files, and copy them to Valorant's Paks directory
 
-### Key Features
-
-- **Gain a Competitive Edge**: Apply stretched resolutions like `1440x1080` to widen targets and potentially improve your aim.
-- **Automated Setup**: The tool automatically detects your VALORANT installation and handles resolution changes for you.
-- **Custom Content**: Easily install and manage custom `.pak` files, such as the popular "Blood Paks," to modify in-game visuals.
-- **User-Friendly Interface**: A simple, dark-themed GUI makes it easy to access all features.
-- **Safe to Use**: Modifies configuration files only and does not interact with Vanguard anti-cheat or game memory.
-
-## Getting Started
-
-### Prerequisites
-
-- Windows 10 or 11 (64-bit)
-- VALORANT installed
-- Administrator privileges
-
-### Installation & First Use
-
-1.  **Download**: Grab the latest version from the [**Releases Page**](https://github.com/yourusername/ValorantEssentials/releases).
-2.  **Extract**: Unzip the downloaded file into a folder of your choice.
-3.  **Run**: Right-click `run.bat` and select **Run as administrator**.
-
-## How to Use
-
-### Applying Stretched Resolution
-
-1.  Launch the application as an administrator.
-2.  Enter your desired resolution in the input box (e.g., `1440x1080`).
-3.  Click the **Start Stretched Res Launcher** button.
-4.  Launch VALORANT. The script will automatically apply the custom resolution when the game starts and revert it when you exit.
-
-### Installing Custom Content
-
-1.  Ensure VALORANT is completely closed.
-2.  Click the **Install/Update 'Blood Paks'** button.
-3.  The tool will download and install the necessary files into your game directory.
-4.  Restart VALORANT to see the changes.
+### 2. Set Up Stretched Resolution
+- Enter your desired stretched resolution (default: 1728x1080) in the WIDTH/HEIGHT fields
+- Click **START STRETCHED RESOLUTION**
+- **IMPORTANT:** After clicking this button, *then* launch Valorant.
+- The tool will patch Valorant's config files and start monitoring the Valorant process
+- Keep the tool open while playing (resolution will revert when Valorant closes or the tool is exited)
 
 ## Configuration (`config.json`)
-
-The `config.json` file allows for manual overrides if auto-detection fails.
-
--   `ValorantPaksPath`: The full path to your VALORANT `Paks` directory.
-    -   *Example*: `"C:\\Riot Games\\VALORANT\\live\\ShooterGame\\Content\\Paks"`
--   `QResUrl`: The download URL for `QRes.exe`, the utility that manages resolution switching.
--   `PaksRepoUrl`: The repository URL where custom content is hosted.
+- `ValorantPaksPath`: Auto-saved path to Valorant's `live/ShooterGame/Content/Paks` directory
+- `QResUrl`: Download URL for the `QRes.exe` resolution tool
+- `PaksRepoUrl`: Source URL for Blood Paks files
 
 ## Troubleshooting
+- **Valorant path not found**: Manually select the `VALORANT/live` folder when prompted
+- **Config files missing**: Launch Valorant to the main menu once, then close the game to generate config files.
+- **Resolution not switching**: Ensure `QRes.exe` was downloaded successfully (check project directory)
 
--   **Permission Denied?** The script requires administrator rights to modify game files and change screen resolution. Please ensure you run `run.bat` as an administrator.
--   **Resolution Not Working?** In VALORANT's video settings, ensure the display mode is set to **Windowed Fullscreen**.
--   **Custom Content Not Loading?** Verify that the `ValorantPaksPath` in `config.json` is correct and that the game was fully closed before you tried installing.
+## Technical Details
+- **Admin Privileges**: The script requires administrator privileges to modify system settings and Valorant game files. It will prompt for elevation if not run as admin.
+- **Resolution Switching**: The tool utilizes `QRes.exe` (downloaded automatically if missing) to change screen resolutions. This is a common command-line utility for display settings.
+- **Config File Patching**: The script modifies `GameUserSettings.ini` files within your Valorant configuration directory to apply stretched resolution settings. It handles read-only attributes to ensure changes can be applied.
+- **Process Monitoring**: A background timer continuously checks for the Valorant game process. When detected, it applies the stretched resolution; when Valorant closes, it reverts to the native resolution.
 
-## A Note on Safety
-
-This tool is designed with safety in mind. It does not hook into the game's process, read game memory, or interact with Vanguard anti-cheat in any way. It only automates file management and resolution changes that could otherwise be done manually. However, the use of custom game files is done at your own risk.
-
-## How to Contribute
-
-Contributions are welcome! If you have an idea for a new feature or a bug fix, please fork the repository, make your changes, and submit a pull request.
+## Notes
+- Always keep the tool open while playing Valorant for resolution management
+- The tool reverts to your native resolution when Valorant closes or the tool is exited
 
 ## License
+This project is open-source and available under the [MIT License](LICENSE).
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
-
-***
-
-*Disclaimer: This project is not affiliated with, authorized, or endorsed by Riot Games, Inc. All game content and materials are trademarks and copyrights of their respective owners.*
+## Contributing
+Contributions are welcome! If you have suggestions for improvements, bug fixes, or new features, please feel free to open an issue or submit a pull request on the GitHub repository.
