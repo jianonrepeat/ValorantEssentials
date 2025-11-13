@@ -50,6 +50,7 @@ namespace ValorantEssentials
             BackColor = _darkCharcoal;
             Padding = new Padding(20);
             Font = new Font("Segoe UI", 10);
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
             // Update Paks Button
             _updatePaksButton = CreateStyledButton(

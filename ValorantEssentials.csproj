@@ -6,7 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!-- <ApplicationIcon>icon.ico</ApplicationIcon> -->
+    <ApplicationIcon>icon.ico</ApplicationIcon>
     <AssemblyTitle>Valorant Essentials</AssemblyTitle>
     <AssemblyDescription>A Windows tool for managing Valorant enhancements</AssemblyDescription>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
