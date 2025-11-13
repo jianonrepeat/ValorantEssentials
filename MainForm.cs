@@ -18,6 +18,7 @@ namespace ValorantEssentials
         private RichTextBox _logBox = null!;
         private ProgressBar? _progressBar;
         private Label? _statusLabel;
+        private Size _nativeResolution;
 
         // Color theme
         private readonly Color _valorantRed = Color.FromArgb(253, 69, 86);
@@ -45,12 +46,14 @@ namespace ValorantEssentials
             Text = "Valorant Essentials";
             Size = new Size(500, 600);
             StartPosition = FormStartPosition.CenterScreen;
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
+            FormBorderStyle = FormBorderStyle.Sizable;
+            MaximizeBox = true;
             BackColor = _darkCharcoal;
             Padding = new Padding(20);
             Font = new Font("Segoe UI", 10);
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            MinimumSize = new Size(500, 600);
+            DoubleBuffered = true;
 
             // Update Paks Button
             _updatePaksButton = CreateStyledButton(
@@ -58,6 +61,7 @@ namespace ValorantEssentials
                 new Point(20, 20),
                 new Size(440, 45),
                 _valorantRed);
+            _updatePaksButton.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
             // Stretched Resolution Group
             var stretchGroup = new GroupBox
@@ -69,6 +73,7 @@ namespace ValorantEssentials
                 BackColor = _darkerCharcoal,
                 Font = new Font("Segoe UI", 10)
             };
+            stretchGroup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
             // Width input
             var widthLabel = new Label
@@ -127,6 +132,7 @@ namespace ValorantEssentials
                 BackColor = _darkerCharcoal,
                 BorderStyle = BorderStyle.FixedSingle
             };
+            progressPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
             _progressBar = new ProgressBar
             {
@@ -135,6 +141,7 @@ namespace ValorantEssentials
                 Style = ProgressBarStyle.Continuous,
                 Visible = false
             };
+            _progressBar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
             _statusLabel = new Label
             {
@@ -144,6 +151,7 @@ namespace ValorantEssentials
                 TextAlign = ContentAlignment.MiddleRight,
                 Text = "Ready"
             };
+            _statusLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
             progressPanel.Controls.AddRange(new Control[] { _progressBar, _statusLabel });
 
@@ -156,6 +164,7 @@ namespace ValorantEssentials
                 ForeColor = _offWhite,
                 Font = new Font("Segoe UI", 12, FontStyle.Bold)
             };
+            logLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
             // Log Box
             _logBox = new RichTextBox
@@ -168,6 +177,7 @@ namespace ValorantEssentials
                 Font = new Font("Consolas", 9),
                 BorderStyle = BorderStyle.FixedSingle
             };
+            _logBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             // Add controls to form
             Controls.AddRange(new Control[] { _updatePaksButton, stretchGroup, progressPanel, logLabel, _logBox });
@@ -221,6 +231,7 @@ namespace ValorantEssentials
             LogInfo("Initializing Valorant Essentials...");
             
             var nativeResolution = _serviceManager.ResolutionService.GetNativeResolution();
+            _nativeResolution = nativeResolution;
             LogInfo($"Native resolution captured: {nativeResolution.Width}x{nativeResolution.Height}");
 
             await InitializeQResAsync();
@@ -423,14 +434,12 @@ namespace ValorantEssentials
             BeginInvoke(() =>
             {
                 LogAction("Valorant closed. Reverting resolution...");
-                
-                var nativeResolution = _serviceManager.ResolutionService.GetNativeResolution();
                 var qresPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QRes.exe");
                 
                 Task.Run(async () =>
                 {
                     var success = await _serviceManager.ResolutionService.SwitchResolutionAsync(
-                        nativeResolution.Width, nativeResolution.Height, qresPath);
+                        _nativeResolution.Width, _nativeResolution.Height, qresPath);
                     
                     if (success)
                     {
@@ -448,7 +457,6 @@ namespace ValorantEssentials
         {
             _serviceManager.ProcessMonitor.StopMonitoring();
             
-            var nativeResolution = _serviceManager.ResolutionService.GetNativeResolution();
             var qresPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QRes.exe");
             
             if (File.Exists(qresPath))
@@ -459,7 +467,7 @@ namespace ValorantEssentials
                     Task.Run(async () =>
                     {
                         await _serviceManager.ResolutionService.SwitchResolutionAsync(
-                            nativeResolution.Width, nativeResolution.Height, qresPath);
+                            _nativeResolution.Width, _nativeResolution.Height, qresPath);
                     }).Wait(TimeSpan.FromSeconds(5));
                 }
                 catch (Exception ex)
