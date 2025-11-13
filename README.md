@@ -1,5 +1,5 @@
 # Valorant Essentials
-A PowerShell GUI tool for managing Valorant-specific enhancements: Blood Paks installation/updates and stretched resolution configuration.
+A C# Windows Forms tool for managing Valorant-specific enhancements: Blood Paks installation/updates and stretched resolution configuration.
 
 ## Purpose
 Simplifies two key Valorant customizations:
@@ -14,55 +14,122 @@ Simplifies two key Valorant customizations:
 - Admin rights enforcement for critical file operations
 - Real-time status logging in the GUI
 - Persistent configuration storage in `config.json`
+- Modern, responsive UI with progress indicators
+- Comprehensive error handling and logging
 
 ## Prerequisites
 - Windows operating system
+- .NET 8.0 Runtime or SDK
 - Valorant installed (launch at least once to generate config files)
-- PowerShell 5.1 or later (pre-installed on Windows 10+)
 - Internet connection (for initial `QRes.exe` download and Blood Paks updates)
 
 ## Installation
 1. Clone or download the ValorantEssentials repository to your local machine
-2. Ensure the project directory structure is intact:
-   - `ValorantEssentials.ps1` (main tool)
-   - `config.json` (configuration file)
-   - `run.bat` (launcher shortcut)
+2. Build the project using .NET CLI or Visual Studio:
+   ```bash
+   dotnet build -c Release
+   ```
+3. Run the application:
+   ```bash
+   dotnet run
+   ```
+   Or run the executable directly from `bin/Release/net8.0-windows/`
 
-## Usage Instructions
-### 1. Install/Update Blood Paks
-- Launch `ValorantEssentials.ps1` (runs as admin automatically if not already)
-- Click the **INSTALL / UPDATE BLOOD PAKS** button
-- The tool will delete old VNG files, download new MatureData files, and copy them to Valorant's Paks directory
+## Usage
 
-### 2. Set Up Stretched Resolution
-- Enter your desired stretched resolution (default: 1728x1080) in the WIDTH/HEIGHT fields
-- Click **START STRETCHED RESOLUTION**
-- **IMPORTANT:** After clicking this button, *then* launch Valorant.
-- The tool will patch Valorant's config files and start monitoring the Valorant process
-- Keep the tool open while playing (resolution will revert when Valorant closes or the tool is exited)
+### Blood Paks Installation
+1. Launch Valorant Essentials
+2. Click "INSTALL / UPDATE BLOOD PAKS"
+3. The tool will automatically download and install the latest Blood Paks
+4. Files will be copied to your Valorant Paks directory
 
-## Configuration (`config.json`)
-- `ValorantPaksPath`: Auto-saved path to Valorant's `live/ShooterGame/Content/Paks` directory
-- `QResUrl`: Download URL for the `QRes.exe` resolution tool
-- `PaksRepoUrl`: Source URL for Blood Paks files
+### Stretched Resolution Setup
+1. Enter your desired resolution width and height
+2. Click "START STRETCHED RESOLUTION"
+3. The tool will patch your Valorant config files
+4. Keep the application open while playing (it monitors Valorant process)
+5. Resolution will automatically switch when Valorant launches/exits
 
-## Troubleshooting
-- **Valorant path not found**: Manually select the `VALORANT/live` folder when prompted
-- **Config files missing**: Launch Valorant to the main menu once, then close the game to generate config files.
-- **Resolution not switching**: Ensure `QRes.exe` was downloaded successfully (check project directory)
+## Project Structure
+```
+ValorantEssentials/
+├── Models/                    # Data models and configuration
+│   └── AppConfiguration.cs   # Application settings management
+├── Services/                 # Business logic and service layer
+│   ├── ServiceManager.cs   # Dependency injection container
+│   └── ValidationService.cs # Input validation
+├── Utilities/               # Helper classes and utilities
+│   ├── FileDownloader.cs   # HTTP file download with progress
+│   ├── IniFileHelper.cs    # INI file parsing and modification
+│   ├── Logger.cs           # Comprehensive logging system
+│   ├── ProcessMonitor.cs   # Valorant process monitoring
+│   ├── RegistryHelper.cs   # Windows registry operations
+│   └── ResolutionHelper.cs # Display resolution management
+├── MainForm.cs             # Main Windows Forms UI
+├── Program.cs              # Application entry point
+├── ValorantEssentials.csproj # Project configuration
+└── config.json             # User configuration (created at runtime)
+```
 
 ## Technical Details
-- **Admin Privileges**: The script requires administrator privileges to modify system settings and Valorant game files. It will prompt for elevation if not run as admin.
-- **Resolution Switching**: The tool utilizes `QRes.exe` (downloaded automatically if missing) to change screen resolutions. This is a common command-line utility for display settings.
-- **Config File Patching**: The script modifies `GameUserSettings.ini` files within your Valorant configuration directory to apply stretched resolution settings. It handles read-only attributes to ensure changes can be applied.
-- **Process Monitoring**: A background timer continuously checks for the Valorant game process. When detected, it applies the stretched resolution; when Valorant closes, it reverts to the native resolution.
 
-## Notes
-- Always keep the tool open while playing Valorant for resolution management
-- The tool reverts to your native resolution when Valorant closes or the tool is exited
+### Architecture
+- **Service-Oriented Design**: Clean separation of concerns with interfaces
+- **Dependency Injection**: Centralized service management
+- **Async/Await**: Non-blocking operations for UI responsiveness
+- **Event-Driven**: Real-time logging and process monitoring
+- **Error Handling**: Comprehensive exception handling and user feedback
 
-## License
-This project is open-source and available under the [MIT License](LICENSE).
+### Key Components
+- **FileDownloader**: Optimized HTTP downloads with progress reporting and cancellation
+- **ProcessMonitor**: Real-time Valorant process detection using threading timers
+- **ResolutionService**: Safe display resolution switching with QRes.exe
+- **IniFileService**: Robust INI file parsing and modification
+- **Logger**: Thread-safe logging with multiple log levels and event notifications
+
+## Configuration
+The application creates a `config.json` file in the executable directory to store:
+- Valorant installation path
+- User preferences
+- Application settings
+
+## Safety Features
+- Automatic backup and restore of native resolution
+- Safe file operations with read-only attribute management
+- Process monitoring prevents resolution issues
+- Comprehensive error handling prevents system issues
+
+## Building from Source
+
+### Requirements
+- .NET 8.0 SDK or later
+- Windows operating system
+- Visual Studio 2022 or VS Code (optional)
+
+### Build Commands
+```bash
+# Debug build
+dotnet build
+
+# Release build
+dotnet build -c Release
+
+# Publish self-contained executable
+dotnet publish -c Release -r win-x64 --self-contained true
+```
 
 ## Contributing
-Contributions are welcome! If you have suggestions for improvements, bug fixes, or new features, please feel free to open an issue or submit a pull request on the GitHub repository.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Disclaimer
+This tool is not affiliated with Riot Games or Valorant. Use at your own risk. Always backup your game files before making modifications.
+
+## Support
+For issues and feature requests, please use the GitHub issue tracker.
