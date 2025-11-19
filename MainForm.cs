@@ -124,10 +124,19 @@ namespace ValorantEssentials
 
             stretchGroup.Controls.AddRange(new Control[] { widthLabel, _widthTextBox, heightLabel, _heightTextBox, _startLauncherButton });
 
+            // Reset Config Button
+            var resetConfigButton = CreateStyledButton(
+                "RESET GAME CONFIGURATION",
+                new Point(20, 305),
+                new Size(440, 35),
+                Color.FromArgb(150, 50, 50)); // Darker red for destructive action
+            resetConfigButton.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            resetConfigButton.Click += ResetConfigButton_Click;
+
             // Progress section
             var progressPanel = new Panel
             {
-                Location = new Point(20, 295),
+                Location = new Point(20, 355),
                 Size = new Size(440, 40),
                 BackColor = _darkerCharcoal,
                 BorderStyle = BorderStyle.FixedSingle
@@ -159,7 +168,7 @@ namespace ValorantEssentials
             var logLabel = new Label
             {
                 Text = "STATUS LOG",
-                Location = new Point(20, 345),
+                Location = new Point(20, 410),
                 Size = new Size(440, 25),
                 ForeColor = _offWhite,
                 Font = new Font("Segoe UI", 12, FontStyle.Bold)
@@ -169,18 +178,26 @@ namespace ValorantEssentials
             // Log Box
             _logBox = new RichTextBox
             {
-                Location = new Point(20, 380),
-                Size = new Size(440, 150),
-                ReadOnly = true,
+                Location = new Point(20, 445),
+                Size = new Size(440, 130),
                 BackColor = _darkerCharcoal,
                 ForeColor = _offWhite,
+                BorderStyle = BorderStyle.FixedSingle,
+                ReadOnly = true,
                 Font = new Font("Consolas", 9),
-                BorderStyle = BorderStyle.FixedSingle
+                ScrollBars = RichTextBoxScrollBars.Vertical
             };
             _logBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             // Add controls to form
-            Controls.AddRange(new Control[] { _updatePaksButton, stretchGroup, progressPanel, logLabel, _logBox });
+            Controls.AddRange(new Control[] {
+                _updatePaksButton,
+                stretchGroup,
+                resetConfigButton,
+                progressPanel,
+                logLabel,
+                _logBox
+            });
 
             // Event handlers
             _updatePaksButton.Click += UpdatePaksButton_Click;
@@ -498,6 +515,65 @@ namespace ValorantEssentials
             });
         }
 
+        private async void ResetConfigButton_Click(object? sender, EventArgs e)
+        {
+            if (MessageBox.Show(
+                "This will delete all VALORANT configuration files. The game will create new default settings on next launch.\n\nAre you sure you want to continue?",
+                "Reset Game Configuration",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                // Update UI on the UI thread
+                this.Invoke((MethodInvoker)delegate {
+                    SetBusyState(true);
+                    UpdateProgress(0, "Resetting game configurations...");
+                });
+
+                // Run the operation on a background thread
+                bool success = await Task.Run(() => 
+                {
+                    try
+                    {
+                        return _serviceManager.IniFileService.ResetAllConfigurations();
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Invoke((MethodInvoker)delegate {
+                            LogError($"Error: {ex.Message}");
+                        });
+                        return false;
+                    }
+                });
+
+                // Update UI with the result
+                this.Invoke((MethodInvoker)delegate {
+                    if (success)
+                    {
+                        LogSuccess("Successfully reset all VALORANT configurations. The game will create new default config files on next launch.");
+                    }
+                    else
+                    {
+                        LogInfo("No configuration files were found or an error occurred while resetting configurations.");
+                    }
+                    UpdateProgress(100, "Ready");
+                    SetBusyState(false);
+                });
+            }
+            catch (Exception ex)
+            {
+                this.Invoke((MethodInvoker)delegate {
+                    LogError($"Unexpected error: {ex.Message}");
+                    UpdateProgress(0, "Error occurred");
+                    SetBusyState(false);
+                });
+            }
+        }
+
         private void DeleteVngFiles()
         {
             if (string.IsNullOrEmpty(_serviceManager.Configuration.ValorantPaksPath))
@@ -607,7 +683,17 @@ namespace ValorantEssentials
         private void LogSuccess(string message) => _serviceManager.Logger.LogSuccess(message);
         private void LogWarning(string message) => _serviceManager.Logger.LogWarning(message);
         private void LogError(string message) => _serviceManager.Logger.LogError(message);
-        private void LogAction(string message) => _serviceManager.Logger.LogAction(message);
+        private void LogAction(string message)
+        {
+            LogToRichTextBox(message, _logAction);
+        }
+
+        private void LogToRichTextBox(string message, Color color)
+        {
+            _logBox.SelectionColor = color;
+            _logBox.AppendText($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} - {message}\n");
+            _logBox.ScrollToCaret();
+        }
 
         protected override void Dispose(bool disposing)
         {

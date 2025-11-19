@@ -7,6 +7,7 @@ namespace ValorantEssentials.Utilities
         void UpdateResolutionSettings(string filePath, int width, int height);
         List<string> FindGameUserSettingsFiles();
         bool ValidateSettingsFile(string filePath);
+        bool ResetAllConfigurations();
     }
 
     public class IniFileService : IIniFileService
@@ -173,6 +174,58 @@ namespace ValorantEssentials.Utilities
             catch (Exception ex)
             {
                 _logger?.LogException(ex, "validating settings file");
+                return false;
+            }
+        }
+
+        public bool ResetAllConfigurations()
+        {
+            try
+            {
+                var configBasePath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    VALORANT_CONFIG_PATH);
+
+                if (!Directory.Exists(configBasePath))
+                {
+                    _logger?.LogWarning("Valorant config directory not found. No configurations to reset.");
+                    return false;
+                }
+
+                var files = Directory.GetFiles(configBasePath, GAME_USER_SETTINGS_FILENAME, SearchOption.AllDirectories)
+                    .Where(f => !f.Contains(CRASH_REPORT_CLIENT_FOLDER, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (files.Count == 0)
+                {
+                    _logger?.LogInfo("No GameUserSettings.ini files found to reset.");
+                    return true;
+                }
+
+                bool anyDeleted = false;
+                foreach (var file in files)
+                {
+                    try
+                    {
+                        File.Delete(file);
+                        _logger?.LogInfo($"Deleted configuration file: {file}");
+                        anyDeleted = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError($"Error deleting configuration file {file}: {ex.Message}");
+                    }
+                }
+
+                if (anyDeleted)
+                {
+                    _logger?.LogSuccess("Successfully reset all VALORANT configurations. The game will create new default config files on next launch.");
+                }
+                return anyDeleted;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError($"Error resetting configurations: {ex.Message}");
                 return false;
             }
         }
