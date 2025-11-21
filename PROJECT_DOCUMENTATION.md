@@ -15,28 +15,6 @@ The application follows a **Service-Oriented Architecture** with dependency inje
 4. **Async/Await Pattern**: Non-blocking operations for UI responsiveness
 5. **Comprehensive Logging**: Centralized logging system with multiple levels
 
-## Project Structure
-
-```
-ValorantEssentials/
-├── Models/                    # Data models and configuration
-│   └── AppConfiguration.cs   # Application settings management
-├── Services/                 # Business logic and service layer
-│   ├── ServiceManager.cs   # Dependency injection container
-│   └── ValidationService.cs # Input validation
-├── Utilities/               # Helper classes and utilities
-│   ├── FileDownloader.cs   # HTTP file download with progress
-│   ├── IniFileHelper.cs    # INI file parsing and modification
-│   ├── Logger.cs           # Comprehensive logging system
-│   ├── ProcessMonitor.cs   # Valorant process monitoring
-│   ├── RegistryHelper.cs   # Windows registry operations
-│   └── ResolutionHelper.cs # Display resolution management
-├── MainForm.cs             # Main Windows Forms UI
-├── Program.cs              # Application entry point
-├── ValorantEssentials.csproj # Project configuration
-└── config.json             # User configuration (created at runtime)
-```
-
 ## Components Documentation
 
 ### ServiceManager

@@ -1,5 +1,4 @@
 using ValorantEssentials.Models;
-using ValorantEssentials.Utilities;
 using ValorantEssentials.Services;
 using System.Drawing;
 
@@ -321,41 +320,11 @@ namespace ValorantEssentials
             
             try
             {
-                LogInfo("Starting Blood Paks update...");
-                
-                // Delete old files
-                await Task.Run(() => DeleteVngFiles(), _cancellationTokenSource.Token);
-                
-                // Download new files
-                var files = new Dictionary<string, string>
-                {
-                    ["MatureData-WindowsClient.pak"] = $"{_serviceManager.Configuration.PaksRepoUrl}/MatureData-WindowsClient.pak",
-                    ["MatureData-WindowsClient.sig"] = $"{_serviceManager.Configuration.PaksRepoUrl}/MatureData-WindowsClient.sig",
-                    ["MatureData-WindowsClient.ucas"] = $"{_serviceManager.Configuration.PaksRepoUrl}/MatureData-WindowsClient.ucas",
-                    ["MatureData-WindowsClient.utoc"] = $"{_serviceManager.Configuration.PaksRepoUrl}/MatureData-WindowsClient.utoc"
-                };
-
-                var tempPath = Path.Combine(Path.GetTempPath(), $"ValorantPaks_{Guid.NewGuid()}");
                 var progress = new Progress<BatchDownloadProgress>(p => 
                     UpdateProgress((p.CompletedFiles * 100 + p.CurrentPercentage) / p.TotalFiles, 
                         $"Downloading {p.CurrentFile}..."));
 
-                var result = await FileDownloader.DownloadFilesAsync(files, tempPath, progress, _cancellationTokenSource.Token);
-                
-                if (result.AllSuccess)
-                {
-                    LogInfo("Copying files to Valorant directory...");
-                    await Task.Run(() => CopyFilesToValorant(tempPath), _cancellationTokenSource.Token);
-                    LogSuccess("Blood Paks updated successfully!");
-                }
-                else
-                {
-                    LogError($"Failed to download some files: {result.Summary}");
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                LogWarning("Blood Paks update cancelled");
+                await _serviceManager.BloodPaksService.UpdatePaksAsync(progress, _cancellationTokenSource.Token);
             }
             catch (Exception ex)
             {
@@ -389,22 +358,10 @@ namespace ValorantEssentials
                 var width = int.Parse(_widthTextBox.Text);
                 var height = int.Parse(_heightTextBox.Text);
                 
-                var configFiles = _serviceManager.IniFileService.FindGameUserSettingsFiles();
-                if (configFiles.Count == 0)
-                {
-                    LogError("No Valorant config files found. Launch Valorant to main menu once.");
-                    return;
-                }
-
-                LogInfo($"Found {configFiles.Count} config files. Patching...");
-                
                 // Use Task.Run to make file operations async
                 await Task.Run(() =>
                 {
-                    foreach (var file in configFiles)
-                    {
-                        _serviceManager.IniFileService.UpdateResolutionSettings(file, width, height);
-                    }
+                    _serviceManager.IniFileService.ApplyResolutionToAllConfigs(width, height);
                 });
 
                 _serviceManager.ProcessMonitor.StartMonitoring();
@@ -571,82 +528,6 @@ namespace ValorantEssentials
                     UpdateProgress(0, "Error occurred");
                     SetBusyState(false);
                 });
-            }
-        }
-
-        private void DeleteVngFiles()
-        {
-            if (string.IsNullOrEmpty(_serviceManager.Configuration.ValorantPaksPath))
-                return;
-
-            try
-            {
-                var vngFiles = Directory.GetFiles(_serviceManager.Configuration.ValorantPaksPath, "VNGLogo-WindowsClient.*");
-                if (vngFiles.Length == 0)
-                {
-                    LogDebug("No VNG files found to delete");
-                    return;
-                }
-
-                foreach (var file in vngFiles)
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        LogInfo($"Deleted {Path.GetFileName(file)}");
-                    }
-                    catch (Exception ex)
-                    {
-                        LogWarning($"Could not delete {Path.GetFileName(file)}: {ex.Message}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogWarning($"Error searching for VNG files: {ex.Message}");
-            }
-        }
-
-        private void CopyFilesToValorant(string sourcePath)
-        {
-            try
-            {
-                var files = Directory.GetFiles(sourcePath);
-                if (files.Length == 0)
-                {
-                    LogWarning("No files found to copy");
-                    return;
-                }
-
-                foreach (var file in files)
-                {
-                    try
-                    {
-                        var destFile = Path.Combine(_serviceManager.Configuration.ValorantPaksPath, Path.GetFileName(file));
-                        File.Copy(file, destFile, true);
-                        LogInfo($"Copied {Path.GetFileName(file)}");
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception($"Failed to copy {Path.GetFileName(file)}: {ex.Message}");
-                    }
-                }
-
-                // Clean up temp directory
-                try
-                {
-                    Directory.Delete(sourcePath, true);
-                    LogDebug($"Cleaned up temporary directory: {sourcePath}");
-                }
-                catch (Exception ex)
-                {
-                    LogWarning($"Could not clean up temp directory: {ex.Message}");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError($"Error copying files: {ex.Message}");
-                throw;
             }
         }
 

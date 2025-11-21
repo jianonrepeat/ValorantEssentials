@@ -1,7 +1,7 @@
 using System.Net.Http;
 using System.Net;
 
-namespace ValorantEssentials.Utilities
+namespace ValorantEssentials.Services
 {
     public static class FileDownloader
     {

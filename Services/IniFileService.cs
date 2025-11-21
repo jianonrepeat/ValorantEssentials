@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 
-namespace ValorantEssentials.Utilities
+
+namespace ValorantEssentials.Services
 {
     public interface IIniFileService
     {
@@ -8,6 +9,7 @@ namespace ValorantEssentials.Utilities
         List<string> FindGameUserSettingsFiles();
         bool ValidateSettingsFile(string filePath);
         bool ResetAllConfigurations();
+        void ApplyResolutionToAllConfigs(int width, int height);
     }
 
     public class IniFileService : IIniFileService
@@ -229,21 +231,21 @@ namespace ValorantEssentials.Utilities
                 return false;
             }
         }
-    }
 
-    // Static helper for backward compatibility
-    public static class IniFileHelper
-    {
-        private static readonly IIniFileService _service = new IniFileService();
-
-        public static void UpdateResolutionSettings(string filePath, int width, int height)
+        public void ApplyResolutionToAllConfigs(int width, int height)
         {
-            _service.UpdateResolutionSettings(filePath, width, height);
-        }
+            var configFiles = FindGameUserSettingsFiles();
+            if (configFiles.Count == 0)
+            {
+                throw new Exception("No Valorant config files found. Launch Valorant to main menu once.");
+            }
 
-        public static List<string> FindGameUserSettingsFiles()
-        {
-            return _service.FindGameUserSettingsFiles();
+            _logger?.LogInfo($"Found {configFiles.Count} config files. Patching...");
+            
+            foreach (var file in configFiles)
+            {
+                UpdateResolutionSettings(file, width, height);
+            }
         }
     }
 }

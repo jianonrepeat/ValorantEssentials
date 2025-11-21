@@ -1,5 +1,5 @@
 using ValorantEssentials.Models;
-using ValorantEssentials.Utilities;
+
 
 namespace ValorantEssentials.Services
 {
@@ -10,6 +10,7 @@ namespace ValorantEssentials.Services
         IResolutionService ResolutionService { get; }
         IRegistryService RegistryService { get; }
         IIniFileService IniFileService { get; }
+        IBloodPaksService BloodPaksService { get; }
         AppConfiguration Configuration { get; }
         
         void InitializeServices();
@@ -25,12 +26,14 @@ namespace ValorantEssentials.Services
         private IResolutionService? _resolutionService;
         private IRegistryService? _registryService;
         private IIniFileService? _iniFileService;
+        private IBloodPaksService? _bloodPaksService;
 
         public ILogger Logger => _logger ?? throw new InvalidOperationException("Services not initialized");
         public IProcessMonitor ProcessMonitor => _processMonitor ?? throw new InvalidOperationException("Services not initialized");
         public IResolutionService ResolutionService => _resolutionService ?? throw new InvalidOperationException("Services not initialized");
         public IRegistryService RegistryService => _registryService ?? throw new InvalidOperationException("Services not initialized");
         public IIniFileService IniFileService => _iniFileService ?? throw new InvalidOperationException("Services not initialized");
+        public IBloodPaksService BloodPaksService => _bloodPaksService ?? throw new InvalidOperationException("Services not initialized");
         public AppConfiguration Configuration => _configuration ?? throw new InvalidOperationException("Services not initialized");
 
         public ServiceManager(string configPath)
@@ -46,6 +49,7 @@ namespace ValorantEssentials.Services
             _resolutionService = new ResolutionService(_logger);
             _registryService = new RegistryService(_logger);
             _iniFileService = new IniFileService(_logger);
+            _bloodPaksService = new BloodPaksService(_logger, _configuration);
         }
 
         public void CleanupServices()

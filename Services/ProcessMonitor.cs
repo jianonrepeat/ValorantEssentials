@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace ValorantEssentials.Utilities
+namespace ValorantEssentials.Services
 {
     public interface IProcessMonitor : IDisposable
     {

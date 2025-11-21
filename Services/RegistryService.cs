@@ -1,6 +1,7 @@
 using Microsoft.Win32;
 
-namespace ValorantEssentials.Utilities
+
+namespace ValorantEssentials.Services
 {
     public interface IRegistryService
     {
@@ -85,14 +86,5 @@ namespace ValorantEssentials.Utilities
             _logger?.LogDebug("Valorant install location not found in any registry path");
             return null;
         }
-    }
-
-    // Static helper for backward compatibility
-    public static class RegistryHelper
-    {
-        private static readonly IRegistryService _service = new RegistryService();
-
-        public static string? FindValorantPaksPath() => _service.FindValorantPaksPath();
-        public static bool IsValorantInstalled() => _service.IsValorantInstalled();
     }
 }

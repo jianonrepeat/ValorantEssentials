@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace ValorantEssentials.Utilities
+namespace ValorantEssentials.Services
 {
     public enum LogLevel
     {

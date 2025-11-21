@@ -1,7 +1,8 @@
 using System.Diagnostics;
 using System.Drawing;
 
-namespace ValorantEssentials.Utilities
+
+namespace ValorantEssentials.Services
 {
     public interface IResolutionService
     {
@@ -130,24 +131,6 @@ namespace ValorantEssentials.Utilities
                 _logger?.LogException(ex, "QRes download");
                 return false;
             }
-        }
-    }
-
-    // Static helper for backward compatibility
-    public static class ResolutionHelper
-    {
-        private static readonly IResolutionService _service = new ResolutionService();
-
-        public static Size GetNativeResolution() => _service.GetNativeResolution();
-        
-        public static bool SwitchResolution(int width, int height, string qresPath)
-        {
-            return _service.SwitchResolutionAsync(width, height, qresPath).GetAwaiter().GetResult();
-        }
-
-        public static async Task<bool> DownloadQResAsync(string destinationPath, IProgress<int>? progress = null)
-        {
-            return await _service.EnsureQResAvailableAsync(destinationPath, progress);
         }
     }
 }
